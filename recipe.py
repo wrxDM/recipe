@@ -1,11 +1,11 @@
 import re
 import pandas as pd
 import json
+import datetime
+from food_heat import get_abst
 
-days = ['周一', "周二", "周三", "周四", "周五"]
 
-
-def parse(df):
+def __parse(df):
     results = {}
     for i, line in df.iterrows():
         cell = line[0]
@@ -15,7 +15,7 @@ def parse(df):
         match = re.match("([0-9]+月[0-9]+日)至([0-9]+月[0-9]+日)([早午晚]餐).*", cell)
         #     print(line)
         if match:
-            date = match[1]
+            begin_date = datetime.datetime.strptime("2018年" + match[1], '%Y年%m月%d日')
             when = match[3]
             if "A" in cell:
                 where = "A"
@@ -26,12 +26,13 @@ def parse(df):
             continue
         if "周一" == cell:
             continue
-        for day, one in zip(days, line):
+        for day, one in enumerate(line):
+            date = (begin_date + datetime.timedelta(days=day)).strftime("%Y%m%d")
             if one:
-                if date + " " + day not in results:
-                    results[date + " " + day] = {}
-                one_day = results[date + " " + day]
-                if when + where not in results[date + " " + day]:
+                if date not in results:
+                    results[date] = {}
+                one_day = results[date]
+                if when + where not in results[date]:
                     one_day[when + where] = []
                 one_day[when + where].append(one)
     return results
@@ -40,19 +41,25 @@ def parse(df):
 def run(path):
     df = pd.read_csv(path, names=['周一', "周二", "周三", "周四", "周五"])
     df = df.fillna("")
-    results = parse(df)
+    results = __parse(df)
     with open("resources/recipe.json", "w") as f:
         f.write(json.dumps(results))
 
 
-def get_recipe(s):
-    # s = "0820-1"
-    day = days[int(s.split("-")[1])]
-    date = "{}月{}日".format(int(s[:2]), int(s[2:4]))
-    with open("recipe.json", "r") as f:
+def get_recipe(date, ww):
+    # ww: when where "午餐A"
+    # date = "0820"
+    date = "2018" + date
+    with open("resources/recipe.json", "r") as f:
         results = json.load(f)
-    return results.get(date + " " + day)
+    day_recipe = results.get(date)
+    if ww in day_recipe:
+        recipe = day_recipe[ww]
+    else:
+        recipe = day_recipe[ww[:2] + 'AB']
+    return get_abst(recipe)
 
 
 if __name__ == '__main__':
-    run("resources/知乎三餐菜单 - 工作表1.csv")
+    # run("resources/知乎三餐菜单 - 工作表1.csv")
+    print(get_recipe("0821", "午餐A"))

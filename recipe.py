@@ -2,7 +2,7 @@ import re
 import pandas as pd
 import json
 import datetime
-from food_heat import get_abst
+from food_heat import get_heat
 
 
 def __parse(df):
@@ -57,9 +57,10 @@ def get_recipe(date, ww):
         recipe = day_recipe[ww]
     else:
         recipe = day_recipe[ww[:2] + 'AB']
-    return get_abst(recipe)
+    # return get_abst(recipe)
+    return get_heat(recipe)
 
 
 if __name__ == '__main__':
     # run("resources/知乎三餐菜单 - 工作表1.csv")
-    print(get_recipe("0821", "午餐A"))
+    print(get_recipe("0821", "晚餐"))

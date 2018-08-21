@@ -62,6 +62,19 @@ def get_abst(foods):
     return result
 
 
+def get_heat(foods):
+    with open("resources/nutrition.json") as f:
+        nutrition = json.load(f)
+    results = {}
+    for food in foods:
+        detail = nutrition.get(food, {})
+        heat = detail.get("热量", "")
+        if "水果" in food:
+            heat = ""
+        results[food] = heat
+    return results
+
+
 def get_nutrition(recipes):
     url = "http://www.boohee.com/food/search?keyword="
     base_url = "http://www.boohee.com"
